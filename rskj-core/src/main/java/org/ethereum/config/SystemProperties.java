@@ -67,7 +67,6 @@ import java.util.stream.Collectors;
  */
 public abstract class SystemProperties {
     private static final String DEFAULT_BIND_ADDRESS = "::";
-    private static final int DEFAULT_RPC_PORT = 4444;
     private static Logger logger = LoggerFactory.getLogger("general");
 
     public static final String PROPERTY_DB_DIR = "database.dir";
@@ -75,11 +74,11 @@ public abstract class SystemProperties {
     public static final String PROPERTY_PEER_ACTIVE = "peer.active";
     public static final String PROPERTY_DB_RESET = "database.reset";
     // TODO review rpc properties
-    public static final String PROPERTY_RPC_ENABLED = "rpc.enabled";
-    public static final String PROPERTY_RPC_PORT = "rpc.port";
-    public static final String PROPERTY_RPC_HOST = "rpc.host";
-    public static final String PROPERTY_RPC_CORS = "rpc.cors";
-    public static final String PROPERTY_RPC_ADDRESS = "rpc.bind_address";
+    public static final String PROPERTY_RPC_CORS = "rpc.providers.web.cors";
+    public static final String PROPERTY_RPC_HTTP_ENABLED = "rpc.providers.web.http.enabled";
+    public static final String PROPERTY_RPC_HTTP_ADDRESS = "rpc.providers.web.http.bind_address";
+    public static final String PROPERTY_RPC_HTTP_HOSTS = "rpc.providers.web.http.hosts";
+    public static final String PROPERTY_RPC_HTTP_PORT = "rpc.providers.web.http.port";
     public static final String PROPERTY_PUBLIC_IP = "public.ip";
     public static final String PROPERTY_BIND_ADDRESS = "bind_address";
 
@@ -720,26 +719,20 @@ public abstract class SystemProperties {
         return configFromFiles.hasPath("blockchain.config.name") ? configFromFiles.getString("blockchain.config.name") : null;
     }
 
-    public boolean isRpcEnabled() {
-        return configFromFiles.hasPath(PROPERTY_RPC_ENABLED) ?
-                configFromFiles.getBoolean(PROPERTY_RPC_ENABLED) : false;
+    public boolean isRpcHttpEnabled() {
+        return configFromFiles.getBoolean(PROPERTY_RPC_HTTP_ENABLED);
     }
 
-    public int rpcPort() {
-        return configFromFiles.hasPath(PROPERTY_RPC_PORT) ?
-                configFromFiles.getInt(PROPERTY_RPC_PORT) : DEFAULT_RPC_PORT;
+    public int rpcHttpPort() {
+        return configFromFiles.getInt(PROPERTY_RPC_HTTP_PORT);
     }
 
-    public List<String> rpcHost() {
-        return !configFromFiles.hasPath(PROPERTY_RPC_HOST) ? new ArrayList<>() :
-                configFromFiles.getStringList(PROPERTY_RPC_HOST);
+    public List<String> rpcHttpHost() {
+        return configFromFiles.getStringList(PROPERTY_RPC_HTTP_HOSTS);
     }
 
-    public InetAddress rpcAddress() {
-        if (!configFromFiles.hasPath(PROPERTY_RPC_ADDRESS)) {
-            return InetAddress.getLoopbackAddress();
-        }
-        String host = configFromFiles.getString(PROPERTY_RPC_ADDRESS);
+    public InetAddress rpcHttpBindAddress() {
+        String host = configFromFiles.getString(PROPERTY_RPC_HTTP_ADDRESS);
         try {
             return InetAddress.getByName(host);
         } catch (UnknownHostException e) {
@@ -749,8 +742,7 @@ public abstract class SystemProperties {
     }
 
     public String corsDomains() {
-        return configFromFiles.hasPath(PROPERTY_RPC_CORS) ?
-                configFromFiles.getString(PROPERTY_RPC_CORS) : null;
+        return configFromFiles.getString(PROPERTY_RPC_CORS);
     }
 
     protected long getLongProperty(String propertyName, long defaultValue) {

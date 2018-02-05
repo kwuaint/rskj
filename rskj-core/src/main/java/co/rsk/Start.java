@@ -157,9 +157,9 @@ public class Start {
             enableSimulateTxsEx();
         }
 
-        if (rskSystemProperties.isRpcEnabled()) {
-            logger.info("RPC enabled");
-            startRPCServer();
+        if (rskSystemProperties.isRpcHttpEnabled()) {
+            logger.info("RPC HTTP enabled");
+            startRpcHttpServer();
         }
         else {
             logger.info("RPC disabled");
@@ -187,7 +187,7 @@ public class Start {
 
     }
 
-    private void startRPCServer() throws InterruptedException {
+    private void startRpcHttpServer() throws InterruptedException {
         web3Service.start();
         web3HttpServer.start();
     }
@@ -214,7 +214,7 @@ public class Start {
     public void stop() {
         logger.info("Shutting down RSK node");
         syncPool.stop();
-        if (rskSystemProperties.isRpcEnabled()) {
+        if (rskSystemProperties.isRpcHttpEnabled()) {
             web3Service.stop();
         }
         peerServer.stop();
