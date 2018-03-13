@@ -15,25 +15,28 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package co.rsk.rpc.netty;
+package co.rsk.rpc.modules.eth.subscribe;
 
-import io.netty.channel.ChannelDuplexHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.timeout.IdleState;
-import io.netty.handler.timeout.IdleStateEvent;
+import co.rsk.jsonrpc.JsonRpcMessage;
+import co.rsk.jsonrpc.JsonRpcVersion;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-/**
- * WebSockets connections are persistent, so this handler listens to events from
- * {@link io.netty.handler.timeout.IdleStateHandler} and closes idle clients.
- */
-public class Web3IdleStateHandler extends ChannelDuplexHandler {
-    @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
-        if (evt instanceof IdleStateEvent) {
-            IdleStateEvent e = (IdleStateEvent) evt;
-            if (e.state() == IdleState.READER_IDLE) {
-//                ctx.close();
-            }
-        }
+public class EthSubscriptionNotification extends JsonRpcMessage {
+
+    private final EthSubscriptionParams params;
+
+    public EthSubscriptionNotification(EthSubscriptionParams params) {
+        super(JsonRpcVersion.V2_0);
+        this.params = params;
+    }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public String getMethod() {
+        return "eth_subscription";
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public EthSubscriptionParams getParams() {
+        return params;
     }
 }

@@ -17,6 +17,7 @@
  */
 package co.rsk.rpc.netty;
 
+import co.rsk.jsonrpc.JsonRpcSerializer;
 import co.rsk.rpc.ModuleDescription;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -73,8 +74,15 @@ public class Web3WebSocketServerTest {
 
         List<ModuleDescription> filteredModules = Collections.singletonList(new ModuleDescription("web3", "1.0", true, Collections.emptyList(), Collections.emptyList()));
         JsonRpcWeb3ServerHandler serverHandler = new JsonRpcWeb3ServerHandler(web3Mock, filteredModules);
+        JsonRpcSerializer serializer = new JsonRpcSerializer();
 
-        Web3WebSocketServer websocketServer = new Web3WebSocketServer(InetAddress.getLoopbackAddress(), randomPort, serverHandler);
+        Web3WebSocketServer websocketServer = new Web3WebSocketServer(
+                InetAddress.getLoopbackAddress(),
+                randomPort,
+                serverHandler,
+                null,
+                serializer
+        );
         websocketServer.start();
 
         OkHttpClient wsClient = new OkHttpClient();

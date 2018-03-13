@@ -15,25 +15,29 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package co.rsk.rpc.netty;
+package co.rsk.jsonrpc;
 
-import io.netty.channel.ChannelDuplexHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.timeout.IdleState;
-import io.netty.handler.timeout.IdleStateEvent;
+import java.util.Objects;
 
-/**
- * WebSockets connections are persistent, so this handler listens to events from
- * {@link io.netty.handler.timeout.IdleStateHandler} and closes idle clients.
- */
-public class Web3IdleStateHandler extends ChannelDuplexHandler {
+public class JsonRpcError extends JsonRpcResultOrError {
+    private final int code;
+    private final String message;
+
+    public JsonRpcError(int code, String message) {
+        this.code = code;
+        this.message = Objects.requireNonNull(message);
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public int getCode() {
+        return code;
+    }
+
     @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
-        if (evt instanceof IdleStateEvent) {
-            IdleStateEvent e = (IdleStateEvent) evt;
-            if (e.state() == IdleState.READER_IDLE) {
-//                ctx.close();
-            }
-        }
+    public boolean isError() {
+        return true;
     }
 }

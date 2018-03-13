@@ -15,25 +15,22 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package co.rsk.rpc.netty;
+package co.rsk.jsonrpc;
 
-import io.netty.channel.ChannelDuplexHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.timeout.IdleState;
-import io.netty.handler.timeout.IdleStateEvent;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
- * WebSockets connections are persistent, so this handler listens to events from
- * {@link io.netty.handler.timeout.IdleStateHandler} and closes idle clients.
+ * A simple true/false JSON-RPC result.
  */
-public class Web3IdleStateHandler extends ChannelDuplexHandler {
-    @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
-        if (evt instanceof IdleStateEvent) {
-            IdleStateEvent e = (IdleStateEvent) evt;
-            if (e.state() == IdleState.READER_IDLE) {
-//                ctx.close();
-            }
-        }
+public class JsonRpcBooleanResult extends JsonRpcResult {
+    private final boolean result;
+
+    public JsonRpcBooleanResult(boolean result) {
+        this.result = result;
+    }
+
+    @JsonValue
+    public boolean getResult() {
+        return result;
     }
 }

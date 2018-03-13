@@ -15,25 +15,28 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package co.rsk.rpc.netty;
+package co.rsk.rpc.modules.eth.subscribe;
 
-import io.netty.channel.ChannelDuplexHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.timeout.IdleState;
-import io.netty.handler.timeout.IdleStateEvent;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-/**
- * WebSockets connections are persistent, so this handler listens to events from
- * {@link io.netty.handler.timeout.IdleStateHandler} and closes idle clients.
- */
-public class Web3IdleStateHandler extends ChannelDuplexHandler {
-    @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
-        if (evt instanceof IdleStateEvent) {
-            IdleStateEvent e = (IdleStateEvent) evt;
-            if (e.state() == IdleState.READER_IDLE) {
-//                ctx.close();
-            }
-        }
+import java.util.Objects;
+
+@JsonFormat(shape=JsonFormat.Shape.ARRAY)
+@JsonPropertyOrder({"subscription"})
+public class EthSubscribeParams {
+
+    private final EthSubscribeTypes subscription;
+
+    @JsonCreator
+    public EthSubscribeParams(
+            @JsonProperty("subscription") EthSubscribeTypes subscription) {
+        this.subscription = Objects.requireNonNull(subscription);
+    }
+
+    public EthSubscribeTypes getSubscription() {
+        return subscription;
     }
 }

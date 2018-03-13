@@ -15,25 +15,26 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package co.rsk.rpc.netty;
+package co.rsk.jsonrpc;
 
-import io.netty.channel.ChannelDuplexHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.timeout.IdleState;
-import io.netty.handler.timeout.IdleStateEvent;
+import org.junit.Test;
 
-/**
- * WebSockets connections are persistent, so this handler listens to events from
- * {@link io.netty.handler.timeout.IdleStateHandler} and closes idle clients.
- */
-public class Web3IdleStateHandler extends ChannelDuplexHandler {
-    @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
-        if (evt instanceof IdleStateEvent) {
-            IdleStateEvent e = (IdleStateEvent) evt;
-            if (e.state() == IdleState.READER_IDLE) {
-//                ctx.close();
-            }
-        }
+import java.io.IOException;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+
+public class JsonRpcInternalServerErrorTest {
+    private JsonRpcSerializer serializer = new JsonRpcSerializer();
+
+    @Test
+    public void serializeError() throws IOException {
+        String message = "{\"jsonrpc\":\"2.0\",\"id\":48,\"error\":{\"code\":-230,\"message\":\"a message\"}}";
+        assertThat(
+                serializer.serializeMessage(
+                        new JsonRpcResponse(48, new JsonRpcInternalError())
+                ),
+                is(message)
+        );
     }
 }

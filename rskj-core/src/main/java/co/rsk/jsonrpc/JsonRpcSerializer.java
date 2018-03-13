@@ -15,25 +15,29 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package co.rsk.rpc.netty;
+package co.rsk.jsonrpc;
 
-import io.netty.channel.ChannelDuplexHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.timeout.IdleState;
-import io.netty.handler.timeout.IdleStateEvent;
+import co.rsk.rpc.modules.RskJsonRpcRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
- * WebSockets connections are persistent, so this handler listens to events from
- * {@link io.netty.handler.timeout.IdleStateHandler} and closes idle clients.
+ * This exposes basic JSON-RPC serialization methods.
  */
-public class Web3IdleStateHandler extends ChannelDuplexHandler {
-    @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
-        if (evt instanceof IdleStateEvent) {
-            IdleStateEvent e = (IdleStateEvent) evt;
-            if (e.state() == IdleState.READER_IDLE) {
-//                ctx.close();
-            }
-        }
+public class JsonRpcSerializer {
+    private final ObjectMapper mapper = new ObjectMapper();
+
+    // TODO add overload with stream
+
+    // TODO(mc) IOException is too generic
+    public String serializeMessage(JsonRpcMessage message) throws IOException {
+        return mapper.writeValueAsString(message);
+    }
+
+    // TODO(mc) IOException is too generic
+    public RskJsonRpcRequest deserializeRequest(InputStream source) throws IOException {
+        return mapper.readValue(source, RskJsonRpcRequest.class);
     }
 }

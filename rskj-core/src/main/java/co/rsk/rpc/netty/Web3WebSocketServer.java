@@ -17,15 +17,19 @@
  */
 package co.rsk.rpc.netty;
 
+import co.rsk.jsonrpc.JsonRpcSerializer;
+import co.rsk.rpc.EthSubscribeEventEmitter;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.*;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
-import io.netty.handler.timeout.IdleStateHandler;
 
 import javax.annotation.Nullable;
 import java.net.InetAddress;
@@ -37,16 +41,23 @@ public class Web3WebSocketServer {
     private final InetAddress host;
     private final int port;
     private final JsonRpcWeb3ServerHandler web3ServerHandler;
+    private final EthSubscribeEventEmitter emitter;
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
+    private final JsonRpcSerializer serializer;
     private @Nullable ChannelFuture webSocketChannel;
 
-    public Web3WebSocketServer(InetAddress host,
-                               int port,
-                               JsonRpcWeb3ServerHandler web3ServerHandler) {
+    public Web3WebSocketServer(
+            InetAddress host,
+            int port,
+            JsonRpcWeb3ServerHandler web3ServerHandler,
+            EthSubscribeEventEmitter emitter,
+            JsonRpcSerializer serializer) {
         this.host = host;
         this.port = port;
         this.web3ServerHandler = web3ServerHandler;
+        this.emitter = emitter;
+        this.serializer = serializer;
         this.bossGroup = new NioEventLoopGroup();
         this.workerGroup = new NioEventLoopGroup();
     }
@@ -62,11 +73,12 @@ public class Web3WebSocketServer {
                     p.addLast(new HttpServerCodec());
                     p.addLast(new HttpObjectAggregator(1024 * 1024 * 5));
                     p.addLast(new WebSocketServerProtocolHandler("/websocket"));
+                    p.addLast(new EthPubSubHandler(emitter, serializer));
                     p.addLast(web3ServerHandler);
                     p.addLast(new Web3ResultWebSocketResponseHandler());
 
-                    p.addLast(new IdleStateHandler(SOCKET_TIMEOUT_SECONDS, 0, 0));
-                    p.addLast(new Web3IdleStateHandler());
+//                    p.addLast(new IdleStateHandler(SOCKET_TIMEOUT_SECONDS, 0, 0));
+//                    p.addLast(new Web3IdleStateHandler());
                 }
             });
         webSocketChannel = b.bind(host, port);
