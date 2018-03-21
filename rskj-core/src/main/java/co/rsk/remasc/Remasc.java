@@ -126,7 +126,19 @@ public class Remasc {
         feesPayer.payMiningFees(processingBlockHeader.getHash().getBytes(), payToRskLabs, remascConstants.getRskLabsAddress(), logs);
         fullBlockReward = fullBlockReward.subtract(payToRskLabs);
 
-        RemascFederationProvider federationProvider = new RemascFederationProvider(config, repository, processingBlock);
+        // TODO to improve
+        // and we need a RepositoryTrack to feed RemascFederationProvider
+        // because it supports the update of bytes (notably, RepositoryImpl don't)
+        // the update of bytes is needed, because BridgeSupport creation could alter
+        // the storage when getChainHead is null (specially in production)
+        BridgeSupport bridgeSupport = new BridgeSupport(
+                config,
+                repository,
+                PrecompiledContracts.BRIDGE_ADDR,
+                processingBlock
+        );
+
+        RemascFederationProvider federationProvider = new RemascFederationProvider(bridgeSupport);
 
         Coin payToFederation = fullBlockReward.divide(BigInteger.valueOf(remascConstants.getFederationDivisor()));
 
