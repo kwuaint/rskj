@@ -23,6 +23,7 @@ import co.rsk.blocks.FileBlockRecorder;
 import co.rsk.config.RskSystemProperties;
 import co.rsk.core.Rsk;
 import co.rsk.core.RskImpl;
+import co.rsk.db.PruneService;
 import co.rsk.mine.MinerClient;
 import co.rsk.mine.MinerServer;
 import co.rsk.mine.TxBuilder;
@@ -43,6 +44,7 @@ import org.ethereum.net.server.PeerServer;
 import org.ethereum.rpc.Web3;
 import org.ethereum.sync.SyncPool;
 import org.ethereum.util.BuildInfo;
+import org.ethereum.vm.PrecompiledContracts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -185,6 +187,9 @@ public class Start {
             }
         }
 
+        PruneService pruneService = new PruneService(rskSystemProperties, blockchain, PrecompiledContracts.REMASC_ADDR);
+
+//        pruneService.process();
     }
 
     private void startRPCServer() throws InterruptedException {
