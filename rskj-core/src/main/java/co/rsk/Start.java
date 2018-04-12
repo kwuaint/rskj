@@ -187,9 +187,9 @@ public class Start {
             }
         }
 
-        PruneService pruneService = new PruneService(rskSystemProperties, blockchain, PrecompiledContracts.REMASC_ADDR);
+        PruneService pruneService = new PruneService(rskSystemProperties, blockchain, PrecompiledContracts.REMASC_ADDR, 1000, 1000);
 
-//        pruneService.process();
+        pruneService.process();
     }
 
     private void startRPCServer() throws InterruptedException {

@@ -34,7 +34,7 @@ import static org.ethereum.datasource.DataSourcePool.levelDbByName;
 /**
  * Created by ajlopez on 21/03/2018.
  */
-public class PruneService {
+public class PruneService implements Runnable {
     private static final int noBlocks = 100;
     private static final int forkBlocks = 30;
 
@@ -43,21 +43,60 @@ public class PruneService {
     private final Blockchain blockchain;
     private final RskAddress contractAddress;
 
-    public PruneService(RskSystemProperties config, Blockchain blockchain, RskAddress contractAddress) {
+    private boolean stopped;
+    private long nextBlockNumber;
+    private int blockNumberGap;
+
+    public PruneService(RskSystemProperties config, Blockchain blockchain, RskAddress contractAddress, long firstBlockNumber, int blockNumberGap) {
         this.config = config;
         this.blockchain = blockchain;
         this.contractAddress = contractAddress;
+        this.nextBlockNumber = firstBlockNumber;
+        this.blockNumberGap = blockNumberGap;
+    }
+
+    public void start() {
+        this.stopped = false;
+        new Thread(this).run();
+    }
+
+    public void run() {
+        while (this.stopped == false) {
+            long bestBlockNumber = this.blockchain.getStatus().getBestBlockNumber();
+
+            if (bestBlockNumber > nextBlockNumber) {
+                this.process();
+
+                nextBlockNumber += this.blockNumberGap;
+            }
+
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void stop() {
+        this.stopped = true;
     }
 
     public void process() {
         long from = this.blockchain.getBestBlock().getNumber() - noBlocks;
+        long to = this.blockchain.getBestBlock().getNumber() - forkBlocks;
+
         String dataSourceName = getDataSourceName(contractAddress);
         KeyValueDataSource sourceDataSource = levelDbByName(this.config, dataSourceName);
         TrieStore sourceStore = new TrieStoreImpl(sourceDataSource);
         KeyValueDataSource targetDataSource = levelDbByName(this.config, dataSourceName + "B");
         TrieStore targetStore = new TrieStoreImpl(targetDataSource);
 
-        trieCopier.trieContractStateCopy(sourceStore, targetStore, blockchain, from, 0, blockchain.getRepository(), this.contractAddress);
+        trieCopier.trieContractStateCopy(sourceStore, targetStore, blockchain, from, to, blockchain.getRepository(), this.contractAddress);
+
+        synchronized (blockchain) {
+            trieCopier.trieContractStateCopy(sourceStore, targetStore, blockchain, to, 0, blockchain.getRepository(), this.contractAddress);
+        }
 
         targetDataSource.close();
         sourceDataSource.close();
@@ -65,6 +104,7 @@ public class PruneService {
         String contractDirectoryName = getDatabaseDirectory(config, dataSourceName);
 
         removeDirectory(contractDirectoryName);
+
         boolean result = FileUtil.fileRename(contractDirectoryName + "B", contractDirectoryName);
     }
 
