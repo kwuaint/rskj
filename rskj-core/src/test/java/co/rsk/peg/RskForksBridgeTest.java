@@ -20,8 +20,11 @@ package co.rsk.peg;
 
 import co.rsk.bitcoinj.core.Address;
 import co.rsk.bitcoinj.core.AddressFormatException;
+import co.rsk.bitcoinj.core.BtcECKey;
 import co.rsk.bitcoinj.core.Coin;
 import co.rsk.bitcoinj.params.RegTestParams;
+import co.rsk.config.BridgeConstants;
+import co.rsk.config.BridgeRegTestConstants;
 import co.rsk.config.TestSystemProperties;
 import co.rsk.core.RskAddress;
 import co.rsk.core.bc.BlockChainImpl;
@@ -51,11 +54,15 @@ import java.util.List;
 public class RskForksBridgeTest {
     private static BlockchainNetConfig blockchainNetConfigOriginal;
     private static TestSystemProperties config;
-
+    private static BridgeConstants bridgeConstants;
+    private static ECKey fedECPrivateKey;
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
         config = new TestSystemProperties();
         config.setBlockchainConfig(new RegTestConfig());
+        bridgeConstants = config.getBlockchainConfig().getCommonConstants().getBridgeConstants();
+        BtcECKey fedBTCPrivateKey = ((BridgeRegTestConstants)bridgeConstants).getFederatorPrivateKeys().get(0);
+        fedECPrivateKey = ECKey.fromPrivate(fedBTCPrivateKey.getPrivKey());
     }
 
     private Repository repository;
@@ -302,7 +309,7 @@ public class RskForksBridgeTest {
         Transaction rskTx = CallTransaction.createCallTransaction(config, nonce, gasPrice.longValue(),
                 gasLimit.longValue(), PrecompiledContracts.BRIDGE_ADDR, value,
                 Bridge.UPDATE_COLLECTIONS);
-        rskTx.sign(new ECKey().getPrivKeyBytes());
+        rskTx.sign(fedECPrivateKey.getPrivKeyBytes());
         return rskTx;
     }
 
