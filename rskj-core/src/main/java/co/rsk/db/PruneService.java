@@ -19,22 +19,25 @@
 package co.rsk.db;
 
 import co.rsk.config.RskSystemProperties;
-import co.rsk.core.Rsk;
 import co.rsk.core.RskAddress;
 import co.rsk.trie.TrieCopier;
-import co.rsk.trie.TrieImpl;
 import co.rsk.trie.TrieStore;
 import co.rsk.trie.TrieStoreImpl;
 import org.ethereum.core.Blockchain;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.util.FileUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.ethereum.datasource.DataSourcePool.levelDbByName;
+import static org.ethereum.datasource.DataSourcePool.closeDataSource;
 
 /**
  * Created by ajlopez on 21/03/2018.
  */
 public class PruneService implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger("prune");
+
     private static final int noBlocks = 100;
     private static final int forkBlocks = 30;
 
@@ -65,9 +68,11 @@ public class PruneService implements Runnable {
             long bestBlockNumber = this.blockchain.getStatus().getBestBlockNumber();
 
             if (bestBlockNumber > nextBlockNumber) {
+                logger.info("Starting prune at height {}", bestBlockNumber);
                 this.process();
+                logger.info("Prune done");
 
-                nextBlockNumber += this.blockNumberGap;
+                nextBlockNumber = this.blockchain.getStatus().getBestBlockNumber() + this.blockNumberGap;
             }
 
             try {
@@ -94,10 +99,16 @@ public class PruneService implements Runnable {
 
         trieCopier.trieContractStateCopy(sourceStore, targetStore, blockchain, from, to, blockchain.getRepository(), this.contractAddress);
 
-        synchronized (blockchain) {
+        blockchain.suspendProcess();
+
+        try {
             trieCopier.trieContractStateCopy(sourceStore, targetStore, blockchain, to, 0, blockchain.getRepository(), this.contractAddress);
         }
+        finally {
+            blockchain.resumeProcess();
+        }
 
+        closeDataSource(dataSourceName);
         targetDataSource.close();
         sourceDataSource.close();
 
@@ -106,6 +117,8 @@ public class PruneService implements Runnable {
         removeDirectory(contractDirectoryName);
 
         boolean result = FileUtil.fileRename(contractDirectoryName + "B", contractDirectoryName);
+
+        levelDbByName(this.config, dataSourceName);
     }
 
     private static String getDatabaseDirectory(RskSystemProperties config, String subdirectoryName) {

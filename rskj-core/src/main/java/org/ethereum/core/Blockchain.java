@@ -98,4 +98,8 @@ public interface Blockchain {
     List<BlockInformation> getBlocksInformationByNumber(long number);
 
     boolean hasBlockInSomeBlockchain(byte[] hash);
+
+    void suspendProcess();
+
+    void resumeProcess();
 }

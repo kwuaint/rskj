@@ -77,6 +77,7 @@ public class Start {
     private final TransactionPool transactionPool;
     private final PeerServer peerServer;
     private final SyncPool.PeerClientFactory peerClientFactory;
+    private final PruneService pruneService;
 
     public static void main(String[] args) throws Exception {
         ApplicationContext ctx = new AnnotationConfigApplicationContext(DefaultConfig.class);
@@ -120,6 +121,7 @@ public class Start {
         this.transactionPool = transactionPool;
         this.peerServer = peerServer;
         this.peerClientFactory = peerClientFactory;
+        this.pruneService = new PruneService(rskSystemProperties, blockchain, PrecompiledContracts.REMASC_ADDR, 1000, 1000);
     }
 
     public void startNode(String[] args) throws Exception {
@@ -187,9 +189,7 @@ public class Start {
             }
         }
 
-        PruneService pruneService = new PruneService(rskSystemProperties, blockchain, PrecompiledContracts.REMASC_ADDR, 1000, 1000);
-
-        pruneService.process();
+        pruneService.start();
     }
 
     private void startRPCServer() throws InterruptedException {
@@ -218,6 +218,7 @@ public class Start {
 
     public void stop() {
         logger.info("Shutting down RSK node");
+        pruneService.stop();
         syncPool.stop();
         if (rskSystemProperties.isRpcEnabled()) {
             web3Service.stop();
