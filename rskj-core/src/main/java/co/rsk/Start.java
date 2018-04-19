@@ -121,7 +121,7 @@ public class Start {
         this.transactionPool = transactionPool;
         this.peerServer = peerServer;
         this.peerClientFactory = peerClientFactory;
-        this.pruneService = new PruneService(rskSystemProperties, blockchain, PrecompiledContracts.REMASC_ADDR, 1000, 1000);
+        this.pruneService = new PruneService(rskSystemProperties, blockchain, PrecompiledContracts.REMASC_ADDR, 200, 200);
     }
 
     public void startNode(String[] args) throws Exception {
@@ -141,6 +141,7 @@ public class Start {
             String versions = EthVersion.supported().stream().map(EthVersion::name).collect(Collectors.joining(", "));
             logger.info("Capability eth version: [{}]", versions);
         }
+
         if (rskSystemProperties.isBlocksEnabled()) {
             setupRecorder(rskSystemProperties.blocksRecorder());
             setupPlayer(rsk, channelManager, blockchain, rskSystemProperties.blocksPlayer());
