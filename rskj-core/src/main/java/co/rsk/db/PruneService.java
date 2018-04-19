@@ -69,7 +69,14 @@ public class PruneService implements Runnable {
 
             if (bestBlockNumber > nextBlockNumber) {
                 logger.info("Starting prune at height {}", bestBlockNumber);
-                this.process();
+
+                try {
+                    this.process();
+                }
+                catch (Throwable t) {
+                    logger.error("Error {}", t);
+                }
+
                 logger.info("Prune done");
 
                 nextBlockNumber = this.blockchain.getStatus().getBestBlockNumber() + this.blockNumberGap;
@@ -118,6 +125,7 @@ public class PruneService implements Runnable {
 
         boolean result = FileUtil.fileRename(contractDirectoryName + "B", contractDirectoryName);
 
+        sourceDataSource.init();
         levelDbByName(this.config, dataSourceName);
     }
 
@@ -133,3 +141,4 @@ public class PruneService implements Runnable {
         FileUtil.recursiveDelete(directoryName);
     }
 }
+
