@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.List;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Created by ajlopez on 29/07/2016.
@@ -94,7 +94,7 @@ public class BlockChainImpl implements Blockchain {
 
     private final Object connectLock = new Object();
     private final Object accessLock = new Object();
-    private final ReentrantLock lock = new ReentrantLock();
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     private final BlockExecutor blockExecutor;
     private BlockRecorder blockRecorder;
@@ -164,7 +164,7 @@ public class BlockChainImpl implements Blockchain {
      */
     @Override
     public ImportResult tryToConnect(Block block) {
-        this.lock.lock();
+        this.lock.readLock().lock();
 
         try {
             if (block == null) {
@@ -199,18 +199,18 @@ public class BlockChainImpl implements Blockchain {
             }
         }
         finally {
-            this.lock.unlock();
+            this.lock.readLock().unlock();
         }
     }
 
     @Override
     public void suspendProcess() {
-        this.lock.lock();
+        this.lock.writeLock().lock();
     }
 
     @Override
     public void resumeProcess() {
-        this.lock.unlock();
+        this.lock.writeLock().unlock();
     }
 
     private ImportResult internalTryToConnect(Block block) {
@@ -438,7 +438,7 @@ public class BlockChainImpl implements Blockchain {
 
     @Override
     public void removeBlocksByNumber(long number) {
-        this.lock.lock();
+        this.lock.writeLock().lock();
 
         try {
             List<Block> blocks = this.getBlocksByNumber(number);
@@ -448,7 +448,7 @@ public class BlockChainImpl implements Blockchain {
             }
         }
         finally {
-            this.lock.unlock();
+            this.lock.writeLock().unlock();
         }
     }
 
