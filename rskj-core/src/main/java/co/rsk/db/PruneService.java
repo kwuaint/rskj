@@ -38,8 +38,8 @@ import static org.ethereum.datasource.DataSourcePool.closeDataSource;
 public class PruneService implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger("prune");
 
-    private static final int noBlocks = 100;
-    private static final int forkBlocks = 30;
+    private static final int noBlocks = 5000;
+    private static final int forkBlocks = 100;
 
     private final TrieCopier trieCopier = new TrieCopier();
     private final RskSystemProperties config;

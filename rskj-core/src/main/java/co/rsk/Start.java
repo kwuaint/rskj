@@ -121,7 +121,7 @@ public class Start {
         this.transactionPool = transactionPool;
         this.peerServer = peerServer;
         this.peerClientFactory = peerClientFactory;
-        this.pruneService = new PruneService(rskSystemProperties, blockchain, PrecompiledContracts.REMASC_ADDR, 200, 200);
+        this.pruneService = new PruneService(rskSystemProperties, blockchain, PrecompiledContracts.REMASC_ADDR, 10000, 10000);
     }
 
     public void startNode(String[] args) throws Exception {
