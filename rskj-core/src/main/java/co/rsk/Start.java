@@ -23,6 +23,7 @@ import co.rsk.blocks.FileBlockRecorder;
 import co.rsk.config.RskSystemProperties;
 import co.rsk.core.Rsk;
 import co.rsk.core.RskImpl;
+import co.rsk.db.PruneConfiguration;
 import co.rsk.db.PruneService;
 import co.rsk.mine.MinerClient;
 import co.rsk.mine.MinerServer;
@@ -121,7 +122,10 @@ public class Start {
         this.transactionPool = transactionPool;
         this.peerServer = peerServer;
         this.peerClientFactory = peerClientFactory;
-        this.pruneService = new PruneService(rskSystemProperties, blockchain, PrecompiledContracts.REMASC_ADDR, 10000, 10000);
+
+        PruneConfiguration pruneConfiguration = new PruneConfiguration(200, 50, 300);
+//        PruneConfiguration pruneConfiguration = new PruneConfiguration(5000, 100, 10000);
+        this.pruneService = new PruneService(pruneConfiguration, rskSystemProperties, blockchain, PrecompiledContracts.REMASC_ADDR);
     }
 
     public void startNode(String[] args) throws Exception {

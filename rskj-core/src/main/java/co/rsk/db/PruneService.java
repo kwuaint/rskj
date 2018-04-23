@@ -38,24 +38,20 @@ import static org.ethereum.datasource.DataSourcePool.closeDataSource;
 public class PruneService implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger("prune");
 
-    private static final int noBlocks = 5000;
-    private static final int forkBlocks = 100;
-
     private final TrieCopier trieCopier = new TrieCopier();
-    private final RskSystemProperties config;
+    private final RskSystemProperties rskConfiguration;
+    private final PruneConfiguration pruneConfiguration;
     private final Blockchain blockchain;
     private final RskAddress contractAddress;
 
     private boolean stopped;
     private long nextBlockNumber;
-    private int blockNumberGap;
 
-    public PruneService(RskSystemProperties config, Blockchain blockchain, RskAddress contractAddress, long firstBlockNumber, int blockNumberGap) {
-        this.config = config;
+    public PruneService(PruneConfiguration pruneConfiguration, RskSystemProperties rskConfiguration, Blockchain blockchain, RskAddress contractAddress) {
+        this.pruneConfiguration = pruneConfiguration;
+        this.rskConfiguration = rskConfiguration;
         this.blockchain = blockchain;
         this.contractAddress = contractAddress;
-        this.nextBlockNumber = firstBlockNumber;
-        this.blockNumberGap = blockNumberGap;
     }
 
     public void start() {
@@ -79,7 +75,7 @@ public class PruneService implements Runnable {
 
                 logger.info("Prune done");
 
-                nextBlockNumber = this.blockchain.getStatus().getBestBlockNumber() + this.blockNumberGap;
+                nextBlockNumber = this.blockchain.getStatus().getBestBlockNumber() + this.pruneConfiguration.getNoBlocksToWait();
             }
 
             try {
@@ -95,13 +91,13 @@ public class PruneService implements Runnable {
     }
 
     public void process() {
-        long from = this.blockchain.getBestBlock().getNumber() - noBlocks;
-        long to = this.blockchain.getBestBlock().getNumber() - forkBlocks;
+        long from = this.blockchain.getBestBlock().getNumber() - this.pruneConfiguration.getNoBlocksToCopy();
+        long to = this.blockchain.getBestBlock().getNumber() - this.pruneConfiguration.getNoBlocksToAvoidForks();
 
         String dataSourceName = getDataSourceName(contractAddress);
-        KeyValueDataSource sourceDataSource = levelDbByName(this.config, dataSourceName);
+        KeyValueDataSource sourceDataSource = levelDbByName(this.rskConfiguration, dataSourceName);
         TrieStore sourceStore = new TrieStoreImpl(sourceDataSource);
-        KeyValueDataSource targetDataSource = levelDbByName(this.config, dataSourceName + "B");
+        KeyValueDataSource targetDataSource = levelDbByName(this.rskConfiguration, dataSourceName + "B");
         TrieStore targetStore = new TrieStoreImpl(targetDataSource);
 
         trieCopier.trieContractStateCopy(sourceStore, targetStore, blockchain, from, to, blockchain.getRepository(), this.contractAddress);
@@ -119,14 +115,18 @@ public class PruneService implements Runnable {
         targetDataSource.close();
         sourceDataSource.close();
 
-        String contractDirectoryName = getDatabaseDirectory(config, dataSourceName);
+        String contractDirectoryName = getDatabaseDirectory(rskConfiguration, dataSourceName);
 
         removeDirectory(contractDirectoryName);
 
         boolean result = FileUtil.fileRename(contractDirectoryName + "B", contractDirectoryName);
 
+        if (!result) {
+            logger.error("Unable to rename contract storage");
+        }
+
         sourceDataSource.init();
-        levelDbByName(this.config, dataSourceName);
+        levelDbByName(this.rskConfiguration, dataSourceName);
     }
 
     private static String getDatabaseDirectory(RskSystemProperties config, String subdirectoryName) {
