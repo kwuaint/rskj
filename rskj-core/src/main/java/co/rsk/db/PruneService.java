@@ -102,31 +102,35 @@ public class PruneService implements Runnable {
 
         trieCopier.trieContractStateCopy(sourceStore, targetStore, blockchain, from, to, blockchain.getRepository(), this.contractAddress);
 
+        long to2 = this.blockchain.getBestBlock().getNumber() - this.pruneConfiguration.getNoBlocksToAvoidForks();
+
+        trieCopier.trieContractStateCopy(sourceStore, targetStore, blockchain, to, to2, blockchain.getRepository(), this.contractAddress);
+
         blockchain.suspendProcess();
 
         try {
-            trieCopier.trieContractStateCopy(sourceStore, targetStore, blockchain, to, 0, blockchain.getRepository(), this.contractAddress);
+            trieCopier.trieContractStateCopy(sourceStore, targetStore, blockchain, to2, 0, blockchain.getRepository(), this.contractAddress);
+
+            closeDataSource(dataSourceName);
+            targetDataSource.close();
+            sourceDataSource.close();
+
+            String contractDirectoryName = getDatabaseDirectory(rskConfiguration, dataSourceName);
+
+            removeDirectory(contractDirectoryName);
+
+            boolean result = FileUtil.fileRename(contractDirectoryName + "B", contractDirectoryName);
+
+            if (!result) {
+                logger.error("Unable to rename contract storage");
+            }
+
+            sourceDataSource.init();
+            //levelDbByName(this.rskConfiguration, dataSourceName);
         }
         finally {
             blockchain.resumeProcess();
         }
-
-        closeDataSource(dataSourceName);
-        targetDataSource.close();
-        sourceDataSource.close();
-
-        String contractDirectoryName = getDatabaseDirectory(rskConfiguration, dataSourceName);
-
-        removeDirectory(contractDirectoryName);
-
-        boolean result = FileUtil.fileRename(contractDirectoryName + "B", contractDirectoryName);
-
-        if (!result) {
-            logger.error("Unable to rename contract storage");
-        }
-
-        sourceDataSource.init();
-        levelDbByName(this.rskConfiguration, dataSourceName);
     }
 
     private static String getDatabaseDirectory(RskSystemProperties config, String subdirectoryName) {

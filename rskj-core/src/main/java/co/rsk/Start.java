@@ -123,8 +123,8 @@ public class Start {
         this.peerServer = peerServer;
         this.peerClientFactory = peerClientFactory;
 
-        PruneConfiguration pruneConfiguration = new PruneConfiguration(200, 50, 300);
-//        PruneConfiguration pruneConfiguration = new PruneConfiguration(5000, 100, 10000);
+//        PruneConfiguration pruneConfiguration = new PruneConfiguration(200, 50, 300);
+        PruneConfiguration pruneConfiguration = new PruneConfiguration(5000, 100, 10000);
         this.pruneService = new PruneService(pruneConfiguration, rskSystemProperties, blockchain, PrecompiledContracts.REMASC_ADDR);
     }
 
