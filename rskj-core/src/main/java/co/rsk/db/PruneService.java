@@ -70,7 +70,7 @@ public class PruneService implements Runnable {
                     this.process();
                 }
                 catch (Throwable t) {
-                    logger.error("Error {}", t);
+                    logger.error("Error {}", t.getMessage());
                 }
 
                 logger.info("Prune done");
