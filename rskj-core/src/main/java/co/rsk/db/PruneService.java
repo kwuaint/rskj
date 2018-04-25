@@ -108,6 +108,8 @@ public class PruneService implements Runnable {
 
         blockchain.suspendProcess();
 
+        logger.info("Suspend blockchain process");
+
         try {
             trieCopier.trieContractStateCopy(sourceStore, targetStore, blockchain, to2, 0, blockchain.getRepository(), this.contractAddress);
 
@@ -130,6 +132,8 @@ public class PruneService implements Runnable {
         }
         finally {
             blockchain.resumeProcess();
+            
+            logger.info("Resume blockchain process");
         }
     }
 
