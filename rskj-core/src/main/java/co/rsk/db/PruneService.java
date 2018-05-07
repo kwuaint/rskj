@@ -52,6 +52,7 @@ public class PruneService implements Runnable {
         this.rskConfiguration = rskConfiguration;
         this.blockchain = blockchain;
         this.contractAddress = contractAddress;
+        this.nextBlockNumber = pruneConfiguration.getNoBlocksToWait();
     }
 
     public void start() {
